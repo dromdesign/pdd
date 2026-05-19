@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Feed</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+    }
+
+    body {
+      margin: 0;
+      background: #fff;
+      display: flex;
+      justify-content: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 430px;
+      padding: 16px;
+      margin-bottom: 60px;
+    }
+
+    .chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 32px;
+    }
+
+    .chip {
+      padding: 10px 14px;
+      border-radius: 9px;
+      background: #eee;
+      font-size: 14px;
+      cursor: pointer;
+      user-select: none;
+      transition: 0.2s;
+    }
+
+    .chip.active {
+      background: #000;
+      color: #fff;
+    }
+
+    .chip img {
+      width: 16px;
+      height: 16px;
+      margin-right: 6px;
+      vertical-align: middle;
+    }
+
+    .feed {
+      display: flex;
+      flex-direction: column;
+      gap: 32px;
+    }
+
+    .card {
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .img {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      background: #d9d9d9;
+      border-radius: 18px;
+      overflow: hidden;
+    }
+
+    .img img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .title {
+      margin-top: 10px;
+      font-size: 20px;
+      font-weight: 700;
+      line-height: 24px;
+    }
+
+    h1 {
+      margin: 10px 0 32px;
+    }
+  </style>
+</head>
+
+<body>
+
+<div class="app">
+
+  <h1>Твоя первая</h1>
+
+  <!-- GROUP -->
+  <div class="chips" id="groupChips">
+    <div class="chip active" data-group="all">Все темы</div>
+    <div class="chip" data-group="1">Цены авто</div>
+    <div class="chip" data-group="2">Выбор и покупка</div>
+    <div class="chip" data-group="3">Подборки авто</div>
+    <div class="chip" data-group="4">Эксплуатация</div>
+    <div class="chip" data-group="5">Это интересно знать</div>
+  </div>
+
+  <!-- TOGGLE -->
+  <div class="chips">
+    <div class="chip" id="typeToggle" data-type="new">
+      <img width="24" height="24" src="img/icon-1.png">
+      <span id="typeText">По новизне</span>
+    </div>
+  </div>
+
+  <div class="feed" id="feed"></div>
+
+</div>
+
+<script>
+  const titles = [
+    "Хочу недорого и красиво: эффектные авто до миллиона рублей",
+    "Как не переплатить при покупке машины",
+
+    "Как не переплатить при покупке машины",
+    "ТОП ошибок при выборе авто",
+
+    "ТОП-10 бюджетных машин",
+    "Какой седан выбрать до 500 тысяч рублей?",
+
+    "Сломался на дороге. Что делать?",
+    "Что убивает двигатель быстрее всего",
+
+    "Как проверить что у машины все в порядке с документами и она не битая?",
+    "Страховка: что это и зачем нужна?"
+  ];
+
+  const groups = [
+    1,1,
+    2,2,
+    3,3,
+    4,4,
+    5,5
+  ];
+
+  const types = [
+    "new","popular",
+    "new","popular",
+    "new","popular",
+    "new","popular",
+    "new","popular"
+  ];
+
+  const feed = document.getElementById("feed");
+
+  for (let i = 0; i < titles.length; i++) {
+    const card = document.createElement("div");
+    card.className = "card";
+
+    card.dataset.group = groups[i];
+    card.dataset.type = types[i];
+    card.dataset.indexInGroup = i % 2;
+
+    card.innerHTML = `
+      <div class="img">
+        <img src="img/pic-${String(i+1).padStart(2,'0')}.jpg" />
+      </div>
+      <div class="title">${titles[i]}</div>
+    `;
+
+    feed.appendChild(card);
+  }
+
+  let activeGroup = "all";
+  let activeType = "new";
+
+  const groupChips = document.querySelectorAll("#groupChips .chip");
+  const typeToggle = document.getElementById("typeToggle");
+  const typeText = document.getElementById("typeText");
+  const cards = Array.from(document.querySelectorAll(".card"));
+
+  function applyFilter() {
+    cards.forEach(card => {
+      const g = card.dataset.group;
+
+      const groupMatch = (activeGroup === "all" || activeGroup === g);
+
+      if (!groupMatch) {
+        card.style.display = "none";
+        return;
+      }
+
+      card.style.display = "block";
+
+      const isFirst = card.dataset.indexInGroup === "0";
+
+      if (activeType === "new") {
+        card.style.order = isFirst ? 0 : 1;
+      } else {
+        card.style.order = isFirst ? 1 : 0;
+      }
+    });
+  }
+
+  groupChips.forEach(chip => {
+    chip.addEventListener("click", () => {
+      groupChips.forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+
+      activeGroup = chip.dataset.group;
+      applyFilter();
+    });
+  });
+
+  typeToggle.addEventListener("click", () => {
+    const isNew = typeToggle.dataset.type === "new";
+
+    if (isNew) {
+      typeToggle.dataset.type = "popular";
+      typeText.textContent = "По популярности";
+      typeToggle.querySelector("img").src = "img/icon-2.png";
+      activeType = "popular";
+    } else {
+      typeToggle.dataset.type = "new";
+      typeText.textContent = "По новизне";
+      typeToggle.querySelector("img").src = "img/icon-1.png";
+      activeType = "new";
+    }
+
+    applyFilter();
+  });
+
+  applyFilter();
+</script>
+
+</body>
+</html>
