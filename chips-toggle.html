@@ -33,10 +33,10 @@
     }
 
     .chip {
-      padding: 10px 16px;
+      padding: 10px 14px;
       border-radius: 9px;
       background: #eee;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       user-select: none;
       transition: 0.2s;
@@ -62,7 +62,9 @@
 
     .card {
       cursor: pointer;
-      transition: 0.2s;
+      transition:
+      transform 0.35s ease-out,
+      opacity 0.35s ease-out;
     }
 
     .img {
@@ -124,34 +126,43 @@
   const titles = [
     "Хочу недорого и красиво: эффектные авто до миллиона рублей",
     "Как не переплатить при покупке машины",
+    "Какие машины дешевеют медленнее остальных",
 
+    // ГРУППА 2
     "Как не переплатить при покупке машины",
     "ТОП ошибок при выборе авто",
+    "Стоит ли покупать авто после такси",
 
+    // ГРУППА 3
     "ТОП-10 бюджетных машин",
     "Какой седан выбрать до 500 тысяч рублей?",
+    "И по городу, и на природу: какие автомобили больше подходят под ваши цели?",
 
+    // ГРУППА 4
     "Сломался на дороге. Что делать?",
     "Что убивает двигатель быстрее всего",
+    "Решил купить дешевую мшину с пробегом. К чему надо быть готовым?",
 
+    // ГРУППА 5
     "Как проверить что у машины все в порядке с документами и она не битая?",
-    "Страховка: что это и зачем нужна?"
+    "Страховка: что это и зачем нужна?",
+    "Как понять что пробег скручен"
   ];
 
   const groups = [
-    1,1,
-    2,2,
-    3,3,
-    4,4,
-    5,5
+    1,1,1,
+    2,2,2,
+    3,3,3,
+    4,4,4,
+    5,5,5
   ];
 
   const types = [
-    "new","popular",
-    "new","popular",
-    "new","popular",
-    "new","popular",
-    "new","popular"
+    "new","popular","new",
+    "new","popular","new",
+    "new","popular","new",
+    "new","popular","new",
+    "new","popular","new"
   ];
 
   const feed = document.getElementById("feed");
@@ -186,7 +197,8 @@
     cards.forEach(card => {
       const g = card.dataset.group;
 
-      const groupMatch = (activeGroup === "all" || activeGroup === g);
+      const groupMatch =
+        activeGroup === "all" || activeGroup === g;
 
       if (!groupMatch) {
         card.style.display = "none";
@@ -197,11 +209,26 @@
 
       const isFirst = card.dataset.indexInGroup === "0";
 
-      if (activeType === "new") {
-        card.style.order = isFirst ? 0 : 1;
-      } else {
-        card.style.order = isFirst ? 1 : 0;
-      }
+      // старт анимации (уход)
+      card.style.opacity = "0";
+      card.style.transform = "translateY(16px)";
+
+      setTimeout(() => {
+
+        // порядок
+        if (activeType === "new") {
+          card.style.order = isFirst ? 0 : 1;
+        } else {
+          card.style.order = isFirst ? 1 : 0;
+        }
+
+        // появление
+        requestAnimationFrame(() => {
+          card.style.opacity = "1";
+          card.style.transform = "translateY(0)";
+        });
+
+      }, 80);
     });
   }
 

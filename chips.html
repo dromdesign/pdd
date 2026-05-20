@@ -33,10 +33,10 @@
     }
 
     .chip {
-      padding: 10px 16px;
+      padding: 10px 14px;
       border-radius: 9px;
       background: #eee;
-      font-size: 16px;
+      font-size: 14px;
       cursor: pointer;
       user-select: none;
     }
@@ -54,8 +54,11 @@
 
     .card {
       cursor: pointer;
-      transition: 0.2s;
+      transition:
+      transform 0.35s ease-out,
+      opacity 0.35s ease-out;
     }
+
 
     .img {
       width: 100%;
@@ -112,55 +115,94 @@
 
 <script>
   const titles = [
+
+    // ГРУППА 1
     "Хочу недорого и красиво: эффектные авто до миллиона рублей",
     "Как не переплатить при покупке машины",
+    "Какие машины дешевеют медленнее остальных",
 
+    // ГРУППА 2
     "Как не переплатить при покупке машины",
     "ТОП ошибок при выборе авто",
+    "Стоит ли покупать авто после такси",
 
+    // ГРУППА 3
     "ТОП-10 бюджетных машин",
     "Какой седан выбрать до 500 тысяч рублей?",
+    "И по городу, и на природу: какие автомобили больше подходят под ваши цели?",
 
+    // ГРУППА 4
     "Сломался на дороге. Что делать?",
     "Что убивает двигатель быстрее всего",
+    "Решил купить дешевую мшину с пробегом. К чему надо быть готовым?",
 
+    // ГРУППА 5
     "Как проверить что у машины все в порядке с документами и она не битая?",
-    "Страховка: что это и зачем нужна?"
+    "Страховка: что это и зачем нужна?",
+    "Как понять что пробег скручен"
   ];
 
   const groups = [
-    1,1,
-    2,2,
-    3,3,
-    4,4,
-    5,5
+
+    // ГРУППА 1
+    1,1,1,
+
+    // ГРУППА 2
+    2,2,2,
+
+    // ГРУППА 3
+    3,3,3,
+
+    // ГРУППА 4
+    4,4,4,
+
+    // ГРУППА 5
+    5,5,5
   ];
 
   const types = [
-    "new","popular",
-    "new","popular",
-    "new","popular",
-    "new","popular",
-    "new","popular"
+
+    // ГРУППА 1
+    "new","popular","new",
+
+    // ГРУППА 2
+    "new","popular","new",
+
+    // ГРУППА 3
+    "new","popular","new",
+
+    // ГРУППА 4
+    "new","popular","new",
+
+    // ГРУППА 5
+    "new","popular","new"
   ];
 
   const feed = document.getElementById("feed");
 
   // создаём карточки
   for (let i = 0; i < titles.length; i++) {
+
     const card = document.createElement("div");
+
     card.className = "card";
 
     card.dataset.group = groups[i];
     card.dataset.type = types[i];
 
-    card.dataset.indexInGroup = i % 2; // 0 или 1
+    // индекс внутри группы
+    card.dataset.indexInGroup = groups
+      .slice(0, i)
+      .filter(g => g === groups[i]).length;
 
     card.innerHTML = `
       <div class="img">
-        <img src="img/pic-${String(i+1).padStart(2,'0')}.jpg" />
+        <img src="img/pic-${String(i + 1).padStart(2,'0')}.jpg" />
       </div>
-      <div class="title">${titles[i]}</div>
+
+      <div class="title">
+        ${titles[i]}
+      </div>
     `;
 
     feed.appendChild(card);
@@ -174,10 +216,13 @@
   const cards = Array.from(document.querySelectorAll(".card"));
 
   function applyFilter() {
+
     cards.forEach(card => {
+
       const g = card.dataset.group;
 
-      const groupMatch = (activeGroup === "all" || activeGroup === g);
+      const groupMatch =
+        activeGroup === "all" || activeGroup === g;
 
       if (!groupMatch) {
         card.style.display = "none";
@@ -186,40 +231,72 @@
 
       card.style.display = "block";
 
-      const isFirst = card.dataset.indexInGroup === "0";
+      const index =
+        Number(card.dataset.indexInGroup);
 
-      // ЛОГИКА ПЕРЕСТАНОВКИ ВНУТРИ ТЕМЫ
-      if (activeType === "new") {
-        card.style.order = isFirst ? 0 : 1;
-      } else {
-        card.style.order = isFirst ? 1 : 0;
-      }
+      // порядок внутри темы
+      card.style.opacity = "0";
+      card.style.transform = "translateY(16px)";
+
+      setTimeout(() => {
+
+        if (activeType === "new") {
+          card.style.order = index;
+        } else {
+          card.style.order = 100 - index;
+        }
+
+        requestAnimationFrame(() => {
+          card.style.opacity = "1";
+          card.style.transform = "translateY(0)";
+        });
+
+      }, 80);
+
     });
+
   }
 
   // GROUP CLICK
   groupChips.forEach(chip => {
+
     chip.addEventListener("click", () => {
-      groupChips.forEach(c => c.classList.remove("active"));
+
+      groupChips.forEach(c =>
+        c.classList.remove("active")
+      );
+
       chip.classList.add("active");
 
       activeGroup = chip.dataset.group;
+
       applyFilter();
+
     });
+
   });
 
   // TYPE CLICK
   typeChips.forEach(chip => {
+
     chip.addEventListener("click", () => {
-      typeChips.forEach(c => c.classList.remove("active"));
+
+      typeChips.forEach(c =>
+        c.classList.remove("active")
+      );
+
       chip.classList.add("active");
 
       activeType = chip.dataset.type;
+
       applyFilter();
+
     });
+
   });
 
   applyFilter();
+
 </script>
 
 </body>
