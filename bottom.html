@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Feed</title>
+
+    <style>
+
+        * {
+          box-sizing: border-box;
+          font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+        }
+
+        body {
+          margin: 0;
+          background: #fff;
+          display: flex;
+          justify-content: center;
+        }
+
+        .app {
+          width: 100%;
+          max-width: 430px;
+          padding: 16px;
+          margin-bottom: 60px;
+        }
+
+        h1 {
+          margin: 10px 0 32px;
+        }
+
+        /* CHIPS */
+
+        .chips {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          margin-bottom: 24px;
+        }
+
+        .chip {
+          padding: 10px 14px;
+          border-radius: 999px;
+          background: #eee;
+          font-size: 14px;
+          cursor: pointer;
+          user-select: none;
+          transition: .2s;
+        }
+
+        .chip.active {
+          background: #000;
+          color: #fff;
+        }
+
+        /* SORT BUTTON */
+
+        .sort-row {
+          margin-bottom: 32px;
+        }
+
+        .sort-button {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+
+          cursor: pointer;
+          user-select: none;
+
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        .sort-button img {
+          width: 18px;
+          height: 18px;
+          object-fit: contain;
+        }
+
+        /* FEED */
+
+        .feed {
+          display: flex;
+          flex-direction: column;
+          gap: 32px;
+        }
+
+        .card {
+          cursor: pointer;
+
+          transition:
+          transform 0.35s ease-out,
+          opacity 0.35s ease-out;
+        }
+
+        .img {
+          width: 100%;
+          aspect-ratio: 16 / 9;
+          background: #d9d9d9;
+          border-radius: 18px;
+          overflow: hidden;
+        }
+
+        .img img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        .title {
+          margin-top: 10px;
+          font-size: 20px;
+          font-weight: 700;
+          line-height: 24px;
+        }
+
+        /* OVERLAY */
+
+        .overlay {
+
+          position: fixed;
+          inset: 0;
+
+          background: rgba(0,0,0,.4);
+
+          opacity: 0;
+          visibility: hidden;
+
+          transition: .25s;
+
+          z-index: 100;
+        }
+
+        .overlay.show {
+          opacity: 1;
+          visibility: visible;
+        }
+
+        /* BOTTOM SHEET */
+
+        .sheet {
+
+          position: fixed;
+          left: 0;
+          right: 0;
+          bottom: 0;
+
+          background: #fff;
+
+          border-radius: 24px 24px 0 0;
+
+          padding: 24px;
+
+          transform: translateY(100%);
+          transition: .28s ease-out;
+
+          z-index: 101;
+        }
+
+        .sheet.show {
+          transform: translateY(0);
+        }
+
+        .sheet-option {
+
+          padding: 18px 0;
+
+          font-size: 16px;
+
+          cursor: pointer;
+        }
+
+    </style>
+</head>
+
+<body>
+
+<div class="app">
+
+    <h1>Твоя первая</h1>
+
+    <!-- GROUP -->
+
+    <div class="chips" id="groupChips">
+
+        <div class="chip active" data-group="all">
+            Все темы
+        </div>
+
+        <div class="chip" data-group="1">
+            Цены авто
+        </div>
+
+        <div class="chip" data-group="2">
+            Выбор и покупка
+        </div>
+
+        <div class="chip" data-group="3">
+            Подборки авто
+        </div>
+
+        <div class="chip" data-group="4">
+            Эксплуатация
+        </div>
+
+        <div class="chip" data-group="5">
+            Это интересно знать
+        </div>
+
+    </div>
+
+    <!-- SORT -->
+
+    <div class="sort-row">
+
+        <div class="sort-button" id="sortButton">
+
+            <img src="img/icon-sort.png" />
+
+            <span id="sortLabel">
+        Сначала новые
+      </span>
+
+        </div>
+
+    </div>
+
+    <!-- FEED -->
+
+    <div class="feed" id="feed"></div>
+
+</div>
+
+<!-- OVERLAY -->
+
+<div class="overlay" id="overlay"></div>
+
+<!-- SHEET -->
+
+<div class="sheet" id="sheet">
+
+    <div class="sheet-option" data-sort="popular">
+        Сначала популярные
+    </div>
+
+    <div class="sheet-option" data-sort="new">
+        Сначала новые
+    </div>
+
+    <div class="sheet-option" data-sort="old">
+        Сначала старые
+    </div>
+
+</div>
+
+<script>
+
+    const titles = [
+
+      // ГРУППА 1
+      "Хочу недорого и красиво: эффектные авто до миллиона рублей",
+      "Какой автомобиль выбрать до 1.5 млн рублей?",
+      "Хочу недорого и быстро: погонять до одного миллиона",
+
+      // ГРУППА 2
+      "Как проходит процесс покупки?",
+      "ТОП-10 ошибок при выборе авто",
+      "Стоит ли покупать авто после такси",
+
+      // ГРУППА 3
+      "ТОП-10 бюджетных машин",
+      "Какой седан выбрать до 500 тысяч рублей?",
+      "И по городу, и на природу: какие автомобили больше подходят под ваши цели?",
+
+      // ГРУППА 4
+      "Сломался на дороге. Что делать?",
+      "Что убивает двигатель быстрее всего",
+      "Решил купить дешевую машину с пробегом. К чему надо быть готовым?",
+
+      // ГРУППА 5
+      "Как проверить что у машины все в порядке с документами и она не битая?",
+      "Страховка: что это и зачем нужна?",
+      "Как понять что пробег скручен"
+
+    ];
+
+    const groups = [
+
+      1,1,1,
+      2,2,2,
+      3,3,3,
+      4,4,4,
+      5,5,5
+
+    ];
+
+    // NEW / POPULAR / OLD
+
+    const types = [
+
+      "new","popular","old",
+      "new","popular","old",
+      "new","popular","old",
+      "new","popular","old",
+      "new","popular","old"
+
+    ];
+
+    const feed = document.getElementById("feed");
+
+    // CREATE CARDS
+
+    for (let i = 0; i < titles.length; i++) {
+
+      const card = document.createElement("div");
+
+      card.className = "card";
+
+      card.dataset.group = groups[i];
+      card.dataset.type = types[i];
+
+      card.innerHTML = `
+
+        <div class="img">
+          <img src="img/pic-${String(i + 1).padStart(2,'0')}.jpg" />
+        </div>
+
+        <div class="title">
+          ${titles[i]}
+        </div>
+
+      `;
+
+      feed.appendChild(card);
+
+    }
+
+    let activeGroup = "all";
+    let activeSort = "new";
+
+    const cards = Array.from(document.querySelectorAll(".card"));
+
+    const groupChips =
+      document.querySelectorAll("#groupChips .chip");
+
+    const sortLabel =
+      document.getElementById("sortLabel");
+
+    // APPLY FILTER
+
+    function applyFilter() {
+
+      let visibleIndex = 0;
+
+      cards.forEach(card => {
+
+        const group =
+          card.dataset.group;
+
+        const type =
+          card.dataset.type;
+
+        const groupMatch =
+          activeGroup === "all" ||
+          activeGroup === group;
+
+        if (!groupMatch) {
+
+          card.style.display = "none";
+          return;
+
+        }
+
+        card.style.display = "block";
+
+        let priority = 1;
+
+        if (type === activeSort) {
+          priority = 0;
+        }
+
+        card.style.order =
+          priority * 100 + visibleIndex;
+
+        visibleIndex++;
+
+        // animation
+
+        card.style.opacity = "0";
+        card.style.transform = "translateY(16px)";
+
+        requestAnimationFrame(() => {
+
+          card.style.opacity = "1";
+          card.style.transform = "translateY(0)";
+
+        });
+
+      });
+
+    }
+
+    // GROUP CLICK
+
+    groupChips.forEach(chip => {
+
+      chip.addEventListener("click", () => {
+
+        groupChips.forEach(c =>
+          c.classList.remove("active")
+        );
+
+        chip.classList.add("active");
+
+        activeGroup = chip.dataset.group;
+
+        applyFilter();
+
+      });
+
+    });
+
+    // SHEET
+
+    const overlay =
+      document.getElementById("overlay");
+
+    const sheet =
+      document.getElementById("sheet");
+
+    const sortButton =
+      document.getElementById("sortButton");
+
+    const sheetOptions =
+      document.querySelectorAll(".sheet-option");
+
+    function openSheet() {
+
+      overlay.classList.add("show");
+      sheet.classList.add("show");
+
+    }
+
+    function closeSheet() {
+
+      overlay.classList.remove("show");
+      sheet.classList.remove("show");
+
+    }
+
+    sortButton.addEventListener("click", openSheet);
+
+    overlay.addEventListener("click", closeSheet);
+
+    // SORT SELECT
+
+    sheetOptions.forEach(option => {
+
+      option.addEventListener("click", () => {
+
+        activeSort = option.dataset.sort;
+
+        if (activeSort === "new") {
+          sortLabel.textContent =
+            "Сначала новые";
+        }
+
+        if (activeSort === "popular") {
+          sortLabel.textContent =
+            "Сначала популярные";
+        }
+
+        if (activeSort === "old") {
+          sortLabel.textContent =
+            "Сначала старые";
+        }
+
+        closeSheet();
+
+        applyFilter();
+
+      });
+
+    });
+
+    applyFilter();
+
+</script>
+
+</body>
+</html>
